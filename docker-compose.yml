@@ -1,0 +1,59 @@
+version: "3"
+
+networks:
+  forgejo:
+    external: false
+
+services:
+  app:
+    image: codeberg.org/forgejo/forgejo:7
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - FORGEJO____APP_NAME=${APP_NAME}
+      - FORGEJO____APP_SLOGAN=${APP_SLOGAN}
+      - FORGEJO__database__DB_TYPE=postgres
+      - FORGEJO__database__HOST=db:5432
+      - FORGEJO__database__NAME=${DB_NAME}
+      - FORGEJO__database__USER=${DB_USER}
+      - FORGEJO__database__PASSWD=${DB_PASSWORD}
+      - FORGEJO__server__SERVER_LANDING_PAGE=${LANDING_PAGE}
+      - FORGEJO__mailer__ENABLED=${MAILER_ENABLED}
+      - FORGEJO__mailer__FROM=${MAILER_FROM}
+      - FORGEJO__mailer__PROTOCOL=smtps
+      - FORGEJO__mailer__SMTP_ADDR=${MAILER_SMTP_ADDR}
+      - FORGEJO__mailer__SMTP_PORT=${MAILER_SMTP_PORT}
+      - FORGEJO__mailer__USER=${MAILER_USER}
+      - FORGEJO__mailer__PASSWD=${MAILER_PASSWD}
+      - FORGEJO__email.incoming__ENABLED=${EMAIL_INCOMING_ENABLED}
+      - FORGEJO__email.incoming__REPLY_TO_ADDRESS=${EMAIL_INCOMING_REPLY_TO_ADDRESS}
+      - FORGEJO__email.incoming__HOST=${EMAIL_INCOMING_HOST}
+      - FORGEJO__email.incoming__PORT=${EMAIL_INCOMING_PORT}
+      - FORGEJO__email.incoming__USERNAME=${EMAIL_INCOMING_USERNAME}
+      - FORGEJO__email.incoming__PASSWORD=${EMAIL_INCOMING_PASSWORD}
+      - FORGEJO__service__ENABLE_NOTIFY_MAIL=true
+      - FORGEJO__email.incoming__USE_TLS=${EMAIL_INCOMING_USE_TLS}
+    restart: always
+    networks:
+      - forgejo
+    volumes:
+      - ./forgejo:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "${PORT_HTTP}:3000"
+      - "${PORT_SSH}:22"
+    depends_on:
+      - db
+
+  db:
+    image: postgres:14
+    restart: always
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    networks:
+      - forgejo
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
